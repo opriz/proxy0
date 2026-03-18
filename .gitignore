@@ -1,0 +1,7 @@
+.proxy_state.json
+clash_config.yaml
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
