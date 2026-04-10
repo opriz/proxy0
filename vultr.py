@@ -55,18 +55,18 @@ def delete_instance(instance_id):
     _delete(f"/instances/{instance_id}")
 
 def wait_for_active(instance_id, timeout=300, interval=10):
-    """等待实例状态变为 active 并获得 IP"""
+    """Wait until the instance becomes active and has an IP."""
     start = time.time()
     while time.time() - start < timeout:
         inst = get_instance(instance_id)
         status = inst.get("status")
         power = inst.get("power_status")
         ip = inst.get("main_ip", "")
-        print(f"  状态: {status} / {power} / IP: {ip}")
+        print(f"  Status: {status} / {power} / IP: {ip}")
         if status == "active" and power == "running" and ip and ip != "0.0.0.0":
             return inst
         time.sleep(interval)
-    raise TimeoutError(f"实例 {instance_id} 在 {timeout}s 内未就绪")
+    raise TimeoutError(f"Instance {instance_id} not ready within {timeout}s")
 
 def list_regions():
     data = _get("/regions")

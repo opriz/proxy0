@@ -2,29 +2,29 @@ import base64
 import uuid
 
 def generate_user_data(port: int, sni: str) -> str:
-    """生成 cloud-init user_data，自动安装并配置 xray VLESS+Reality"""
-    # UUID 和密钥在服务端生成，脚本运行后从服务端读取
+    """Generate cloud-init user_data that installs and configures xray VLESS+Reality."""
+    # UUID and keys are generated on the server; the script reads them back afterwards
     client_uuid = str(uuid.uuid4())
 
     script = f"""#!/bin/bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
 
-# 基础依赖
+# Base dependencies
 apt-get update -qq
 apt-get install -y -qq curl wget unzip jq
 
-# 安装 xray
+# Install xray
 bash <(curl -sL https://github.com/XTLS/Xray-install/raw/main/install-release.sh) install
 
-# 生成 Reality 密钥对（兼容新旧版本输出格式）
+# Generate a Reality keypair (handles both old and new xray output formats)
 KEYS=$(xray x25519)
 PRIVATE_KEY=$(echo "$KEYS" | grep -iE 'privatekey|private key' | awk -F': ' '{{print $2}}' | tr -d ' ')
 PUBLIC_KEY=$(echo "$KEYS" | grep -iE 'password|public key' | awk -F': ' '{{print $2}}' | tr -d ' ')
 SHORT_ID=$(openssl rand -hex 4)
 CLIENT_UUID="{client_uuid}"
 
-# 写入 xray 配置
+# Write xray config
 cat > /usr/local/etc/xray/config.json << EOF
 {{
   "log": {{
@@ -75,7 +75,7 @@ cat > /usr/local/etc/xray/config.json << EOF
 }}
 EOF
 
-# 保存客户端所需参数到文件（供后续读取）
+# Save client parameters so the local script can read them back later
 cat > /root/proxy_info.json << EOF
 {{
   "uuid": "$CLIENT_UUID",
@@ -86,7 +86,7 @@ cat > /root/proxy_info.json << EOF
 }}
 EOF
 
-# 添加 SSH key
+# Install SSH key
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
 cat > /root/.ssh/authorized_keys << 'SSHKEY'
@@ -94,16 +94,16 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiDB8l5XVSwN94gj5K0INj5inFtYP/uBkh/ZW2+kKNi
 SSHKEY
 chmod 600 /root/.ssh/authorized_keys
 
-# 禁用 SSH 密码登录
+# Disable SSH password login
 sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
 systemctl reload sshd
 
-# 启动 xray
+# Start xray
 systemctl enable xray
 systemctl restart xray
 
-# 开放防火墙（如果有 ufw）
+# Open firewall if ufw is present
 if command -v ufw &>/dev/null; then
   ufw allow {port}/tcp
 fi
@@ -116,7 +116,7 @@ echo "xray setup done"
 
 
 def get_client_uuid_from_script(user_data_b64: str) -> str:
-    """从 user_data 中提取预设的 client UUID"""
+    """Extract the preset client UUID from the user_data script."""
     script = base64.b64decode(user_data_b64).decode()
     for line in script.splitlines():
         if line.startswith("CLIENT_UUID="):

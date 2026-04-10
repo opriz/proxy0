@@ -1,6 +1,6 @@
 import os
 
-# 从 .env 文件加载环境变量（如果存在）
+# Load environment variables from .env if it exists
 _env_file = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(_env_file):
     with open(_env_file) as _f:
@@ -10,21 +10,21 @@ if os.path.exists(_env_file):
                 _k, _v = _line.split("=", 1)
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-# Vultr API Key（敏感，从环境变量读取）
+# Vultr API key (sensitive, read from environment)
 VULTR_API_KEY = os.environ.get("VULTR_API_KEY", "")
 
-# SSH Key ID（Vultr 上的，用于免密登录）
+# SSH key ID (on Vultr, used for passwordless login)
 SSH_KEY_ID = os.environ.get("VULTR_SSH_KEY_ID", "")
 
-# 实例配置
+# Instance config
 INSTANCE_LABEL = "proxy0"
-REGION = os.environ.get("VULTR_REGION", "icn")   # 首尔，可选: nrt, sgp, lax, itm
-PLAN = "vc2-1c-1gb"     # $5/月（东京最低配置）
+REGION = os.environ.get("VULTR_REGION", "icn")   # Seoul; other options: nrt, sgp, lax, itm
+PLAN = "vc2-1c-1gb"     # $5/month (smallest plan)
 OS_ID = 2136            # Debian 12 x64
 
-# xray 配置
+# xray config
 XRAY_PORT = 443
-XRAY_SNI = "www.microsoft.com"   # Reality 伪装目标
+XRAY_SNI = "www.microsoft.com"   # Reality masquerade target
 
-# 状态文件（记录当前实例信息）
+# State file (tracks the current instance)
 STATE_FILE = ".proxy_state.json"

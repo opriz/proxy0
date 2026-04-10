@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-proxy.py - Vultr 代理服务器管理工具
+proxy.py - Vultr proxy server management tool
 
-用法:
-  python proxy.py create              # 创建新服务器
-  python proxy.py destroy             # 销毁当前服务器
-  python proxy.py rebuild             # 销毁并重建（IP 被封时使用）
-  python proxy.py config              # 显示客户端配置
-  python proxy.py status              # 查看当前服务器状态
-  python proxy.py check               # 检测 IP 是否可用
-  python proxy.py regions             # 列出可用地区
+Usage:
+  python proxy.py create              # create a new server
+  python proxy.py destroy             # destroy the current server
+  python proxy.py rebuild             # destroy and recreate (use when IP is blocked)
+  python proxy.py config              # print the client config
+  python proxy.py status              # show the current server status
+  python proxy.py check               # probe IP connectivity
+  python proxy.py regions             # list available regions
 """
 
 import sys
@@ -29,7 +29,7 @@ from config import (
 )
 
 
-# ─── 状态文件操作 ────────────────────────────────────────────────────────────
+# ─── State file helpers ──────────────────────────────────────────────────────
 
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
@@ -46,16 +46,16 @@ def clear_state():
         os.remove(STATE_FILE)
 
 
-# ─── 核心操作 ────────────────────────────────────────────────────────────────
+# ─── Core commands ───────────────────────────────────────────────────────────
 
 def cmd_create():
     state = load_state()
     if state.get("instance_id"):
-        print(f"已有实例运行中: {state['instance_id']} / {state.get('ip')}")
-        print("如需重建请运行: python proxy.py rebuild")
+        print(f"An instance is already running: {state['instance_id']} / {state.get('ip')}")
+        print("To recreate it, run: python proxy.py rebuild")
         return
 
-    print(f"正在创建实例 (地区: {REGION}, 套餐: {PLAN})...")
+    print(f"Creating instance (region: {REGION}, plan: {PLAN})...")
     user_data = cloudinit.generate_user_data(XRAY_PORT, XRAY_SNI)
     client_uuid = cloudinit.get_client_uuid_from_script(user_data)
 
@@ -68,19 +68,19 @@ def cmd_create():
         ssh_key_ids=[SSH_KEY_ID] if SSH_KEY_ID else None,
     )
     instance_id = inst["id"]
-    print(f"实例已创建: {instance_id}")
-    print("等待实例就绪（约 2-3 分钟）...")
+    print(f"Instance created: {instance_id}")
+    print("Waiting for the instance to be ready (about 2-3 minutes)...")
 
     inst = vultr.wait_for_active(instance_id)
     ip = inst["main_ip"]
-    print(f"实例就绪! IP: {ip}")
+    print(f"Instance is ready! IP: {ip}")
 
-    # 等待 xray 安装完成（cloud-init 需要时间）
-    print("等待 xray 初始化（约 60 秒）...")
+    # Wait for xray to finish installing (cloud-init takes a bit)
+    print("Waiting for xray to initialize (about 60 seconds)...")
     time.sleep(60)
 
-    # 从服务端读取 proxy_info.json
-    print("读取服务端配置...")
+    # Read proxy_info.json from the server
+    print("Reading server-side config...")
     proxy_info = fetch_proxy_info(ip)
 
     state = {
@@ -102,27 +102,27 @@ def cmd_create():
 def cmd_destroy():
     state = load_state()
     if not state.get("instance_id"):
-        # 尝试从 Vultr 查找
+        # Try to find it via the Vultr API
         instances = vultr.list_instances(label=INSTANCE_LABEL)
         if not instances:
-            print("没有找到运行中的实例")
+            print("No running instance found")
             return
         for inst in instances:
-            print(f"删除实例: {inst['id']} / {inst.get('main_ip')}")
+            print(f"Deleting instance: {inst['id']} / {inst.get('main_ip')}")
             vultr.delete_instance(inst["id"])
         clear_state()
-        print("已销毁所有实例")
+        print("All instances destroyed")
         return
 
     instance_id = state["instance_id"]
-    print(f"正在销毁实例: {instance_id} / {state.get('ip')}")
+    print(f"Destroying instance: {instance_id} / {state.get('ip')}")
     vultr.delete_instance(instance_id)
     clear_state()
-    print("实例已销毁")
+    print("Instance destroyed")
 
 
 def cmd_rebuild():
-    print("开始重建（销毁旧实例 → 创建新实例）...")
+    print("Rebuilding (destroy old instance -> create new instance)...")
     cmd_destroy()
     time.sleep(5)
     cmd_create()
@@ -131,10 +131,10 @@ def cmd_rebuild():
 def cmd_config():
     state = load_state()
     if not state.get("ip"):
-        print("没有运行中的实例，请先运行: python proxy.py create")
+        print("No running instance. Run: python proxy.py create")
         return
     if not state.get("public_key"):
-        print("缺少 public_key，尝试从服务端重新读取...")
+        print("public_key is missing, trying to re-read it from the server...")
         proxy_info = fetch_proxy_info(state["ip"])
         state.update(proxy_info)
         save_state(state)
@@ -144,75 +144,75 @@ def cmd_config():
 def cmd_status():
     state = load_state()
     if not state.get("instance_id"):
-        print("没有本地状态，尝试从 Vultr API 查询...")
+        print("No local state, querying the Vultr API...")
         instances = vultr.list_instances(label=INSTANCE_LABEL)
         if not instances:
-            print("没有找到运行中的实例")
+            print("No running instance found")
         for inst in instances:
             print(f"  ID: {inst['id']}")
             print(f"  IP: {inst.get('main_ip')}")
-            print(f"  状态: {inst.get('status')} / {inst.get('power_status')}")
+            print(f"  Status: {inst.get('status')} / {inst.get('power_status')}")
         return
 
-    print(f"实例 ID : {state['instance_id']}")
-    print(f"IP      : {state.get('ip')}")
-    print(f"地区    : {state.get('region')}")
-    print(f"端口    : {state.get('port')}")
-    print(f"UUID    : {state.get('uuid')}")
+    print(f"Instance ID : {state['instance_id']}")
+    print(f"IP          : {state.get('ip')}")
+    print(f"Region      : {state.get('region')}")
+    print(f"Port        : {state.get('port')}")
+    print(f"UUID        : {state.get('uuid')}")
 
-    # 从 API 获取实时状态
+    # Fetch live status from the API
     try:
         inst = vultr.get_instance(state["instance_id"])
-        print(f"API状态 : {inst.get('status')} / {inst.get('power_status')}")
+        print(f"API status  : {inst.get('status')} / {inst.get('power_status')}")
     except Exception as e:
-        print(f"API查询失败: {e}")
+        print(f"API query failed: {e}")
 
 
 def cmd_check():
     state = load_state()
     ip = state.get("ip")
     if not ip:
-        print("没有运行中的实例")
+        print("No running instance")
         return
 
-    print(f"检测 IP: {ip}")
+    print(f"Probing IP: {ip}")
 
-    # 方法1: TCP 连通性
+    # Method 1: TCP connectivity
     port = state.get("port", XRAY_PORT)
     import socket
     try:
         sock = socket.create_connection((ip, port), timeout=5)
         sock.close()
-        print(f"  TCP {ip}:{port} ✓ 可连接")
+        print(f"  TCP {ip}:{port} ✓ reachable")
     except Exception as e:
-        print(f"  TCP {ip}:{port} ✗ 不可连接 ({e})")
+        print(f"  TCP {ip}:{port} ✗ unreachable ({e})")
 
-    # 方法2: ping
+    # Method 2: ping
     result = subprocess.run(
         ["ping", "-c", "3", "-W", "2000", ip],
         capture_output=True, text=True
     )
     if result.returncode == 0:
-        # 提取延迟
+        # Extract latency
         for line in result.stdout.splitlines():
             if "avg" in line or "round-trip" in line:
                 print(f"  Ping: {line.strip()}")
         print(f"  Ping ✓")
     else:
-        print(f"  Ping ✗ IP 可能被封锁，建议运行: python proxy.py rebuild")
+        print(f"  Ping ✗ IP may be blocked; consider running: python proxy.py rebuild")
 
 
 def cmd_regions():
-    print("获取可用地区列表...")
+    print("Fetching available regions...")
     regions = vultr.list_regions()
     for r in sorted(regions, key=lambda x: x["id"]):
         print(f"  {r['id']:8s} {r['city']}, {r['country']}")
 
 
-# ─── 辅助函数 ────────────────────────────────────────────────────────────────
+# ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def fetch_proxy_info(ip: str) -> dict:
-    """通过 SSH 从服务端读取 /root/proxy_info.json"""
+    """Read /root/proxy_info.json from the server over SSH."""
     try:
         result = subprocess.run(
             [
@@ -227,9 +227,9 @@ def fetch_proxy_info(ip: str) -> dict:
         if result.returncode == 0:
             return json.loads(result.stdout)
         else:
-            print(f"  SSH 读取失败: {result.stderr.strip()}")
+            print(f"  SSH read failed: {result.stderr.strip()}")
     except Exception as e:
-        print(f"  SSH 连接失败: {e}")
+        print(f"  SSH connection failed: {e}")
     return {}
 
 
@@ -242,27 +242,27 @@ def print_config(state: dict):
     sni = state["sni"]
 
     if not public_key:
-        print("警告: public_key 为空，配置可能不完整")
-        print("请等待服务器初始化完成后重新运行: python proxy.py config")
+        print("Warning: public_key is empty, the config may be incomplete")
+        print("Wait for the server to finish initializing, then run: python proxy.py config")
         return
 
-    # VLESS 链接
+    # VLESS link
     link = cc.vless_link(ip, uuid, port, public_key, short_id, sni)
-    print("【Shadowrocket / v2rayN 导入链接】")
+    print("[Shadowrocket / v2rayN import link]")
     print(link)
     print()
 
-    # Clash 配置
+    # Clash config
     clash_yaml = cc.generate_clash_config(ip, uuid, port, public_key, short_id, sni)
     clash_file = "clash_config.yaml"
     with open(clash_file, "w") as f:
         f.write(clash_yaml)
-    print(f"【Clash Meta 配置文件】已保存到: {clash_file}")
+    print(f"[Clash Meta config] saved to: {clash_file}")
     print()
     print(clash_yaml)
 
 
-# ─── 入口 ────────────────────────────────────────────────────────────────────
+# ─── Entry point ─────────────────────────────────────────────────────────────
 
 COMMANDS = {
     "create": cmd_create,

@@ -5,7 +5,7 @@ import json
 
 def vless_link(ip: str, uuid: str, port: int, public_key: str,
                short_id: str, sni: str, remark: str = "proxy0") -> str:
-    """生成 VLESS Reality 分享链接"""
+    """Build a VLESS Reality share link."""
     params = (
         f"type=tcp"
         f"&security=reality"
@@ -20,7 +20,7 @@ def vless_link(ip: str, uuid: str, port: int, public_key: str,
 
 def clash_proxy(ip: str, uuid: str, port: int, public_key: str,
                 short_id: str, sni: str, name: str = "proxy0") -> dict:
-    """生成 Clash Meta 代理配置"""
+    """Build a Clash Meta proxy entry."""
     return {
         "name": name,
         "type": "vless",
@@ -42,7 +42,7 @@ def clash_proxy(ip: str, uuid: str, port: int, public_key: str,
 
 def generate_clash_config(ip: str, uuid: str, port: int, public_key: str,
                            short_id: str, sni: str) -> str:
-    """生成完整的 Clash Meta 配置文件内容"""
+    """Build the full Clash Meta config file content."""
     proxy = clash_proxy(ip, uuid, port, public_key, short_id, sni)
     config = {
         "mixed-port": 7890,
