@@ -18,7 +18,7 @@ SSH_KEY_ID = os.environ.get("VULTR_SSH_KEY_ID", "")
 
 # 实例配置
 INSTANCE_LABEL = "proxy0"
-REGION = os.environ.get("VULTR_REGION", "nrt")   # 东京，可选: sgp, lax, itm, icn
+REGION = os.environ.get("VULTR_REGION", "icn")   # 首尔，可选: nrt, sgp, lax, itm
 PLAN = "vc2-1c-1gb"     # $5/月（东京最低配置）
 OS_ID = 2136            # Debian 12 x64
 

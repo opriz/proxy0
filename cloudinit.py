@@ -86,6 +86,14 @@ cat > /root/proxy_info.json << EOF
 }}
 EOF
 
+# 添加 SSH key
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+cat > /root/.ssh/authorized_keys << 'SSHKEY'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFiDB8l5XVSwN94gj5K0INj5inFtYP/uBkh/ZW2+kKNi zhujian@zhujiandeMacBook-Air.local
+SSHKEY
+chmod 600 /root/.ssh/authorized_keys
+
 # 禁用 SSH 密码登录
 sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
