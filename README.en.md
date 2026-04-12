@@ -56,25 +56,56 @@ Reset the server password in Aliyun SWAS console and fill it in `ALIYUN_PW`.
 
 ---
 
+## Unified Entry (Recommended)
+
+Use `main.py` to manage all platforms:
+
+```bash
+# Vultr commands
+python3 main.py vultr create              # Create Vultr server
+python3 main.py vultr destroy             # Destroy Vultr server
+python3 main.py vultr rebuild             # Rebuild Vultr server
+python3 main.py vultr config              # Show Vultr config
+python3 main.py vultr status              # Show Vultr status
+python3 main.py vultr check               # Check Vultr connectivity
+python3 main.py vultr regions             # List Vultr regions
+
+# Aliyun commands
+python3 main.py aliyun list               # List Aliyun instances
+python3 main.py aliyun deploy <ip>        # Deploy to Aliyun instance
+python3 main.py aliyun config             # Show Aliyun config
+python3 main.py aliyun status             # Show Aliyun status
+python3 main.py aliyun check              # Check Aliyun connectivity
+python3 main.py aliyun destroy            # Destroy Aliyun server
+python3 main.py aliyun rebuild            # Rebuild Aliyun server
+
+# Auto-detect commands (show whichever is configured)
+python3 main.py status                    # Show all configured server status
+python3 main.py config                    # Show all configured server configs
+python3 main.py check                     # Check all servers connectivity
+```
+
+---
+
 ## Vultr Guide
 
 ### Create Server
 
 ```bash
-python3 proxy.py create
+python3 main.py vultr create
 ```
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `python3 proxy.py create` | Create a server and print the client config |
-| `python3 proxy.py destroy` | Destroy the current server (stops billing) |
-| `python3 proxy.py rebuild` | Destroy and recreate — use when the IP is blocked |
-| `python3 proxy.py config` | Re-print the client config |
-| `python3 proxy.py status` | Show the current server status |
-| `python3 proxy.py check` | Probe the IP (TCP connect + ping) |
-| `python3 proxy.py regions` | List all available regions |
+| `python3 main.py vultr create` | Create a server and print the client config |
+| `python3 main.py vultr destroy` | Destroy the current server (stops billing) |
+| `python3 main.py vultr rebuild` | Destroy and recreate — use when the IP is blocked |
+| `python3 main.py vultr config` | Re-print the client config |
+| `python3 main.py vultr status` | Show the current server status |
+| `python3 main.py vultr check` | Probe the IP (TCP connect + ping) |
+| `python3 main.py vultr regions` | List all available regions |
 
 ### Recommended Regions
 
@@ -102,23 +133,23 @@ python3 proxy.py create
 
 ```bash
 # Method 1: Deploy to specific IP
-python3 proxy_aliyun.py deploy 8.x.x.x
+python3 main.py aliyun deploy 8.x.x.x
 
 # Method 2: List instances and select
-python3 proxy_aliyun.py deploy
+python3 main.py aliyun deploy
 ```
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `python3 proxy_aliyun.py list` | List all instances |
-| `python3 proxy_aliyun.py deploy <ip>` | Deploy xray to specified instance |
-| `python3 proxy_aliyun.py config` | Show client config |
-| `python3 proxy_aliyun.py status` | Show current server status |
-| `python3 proxy_aliyun.py check` | Check IP connectivity |
-| `python3 proxy_aliyun.py destroy` | Destroy current server |
-| `python3 proxy_aliyun.py rebuild` | Destroy and rebuild |
+| `python3 main.py aliyun list` | List all instances |
+| `python3 main.py aliyun deploy <ip>` | Deploy xray to specified instance |
+| `python3 main.py aliyun config` | Show client config |
+| `python3 main.py aliyun status` | Show current server status |
+| `python3 main.py aliyun check` | Check IP connectivity |
+| `python3 main.py aliyun destroy` | Destroy current server |
+| `python3 main.py aliyun rebuild` | Destroy and rebuild |
 
 ### Aliyun Features
 
@@ -140,12 +171,33 @@ Edit `config.py` to change any of these.
 
 ---
 
+## Shell Aliases
+
+To simplify commands, add aliases to your shell config:
+
+```bash
+# ~/.zshrc or ~/.bashrc
+alias vultr='python3 ~/github/proxy0/main.py vultr'
+alias aliyun='python3 ~/github/proxy0/main.py aliyun'
+alias proxy='python3 ~/github/proxy0/main.py'
+```
+
+Then use directly:
+```bash
+vultr status      # Same as: python3 main.py vultr status
+aliyun config     # Same as: python3 main.py aliyun config
+proxy check       # Check all servers
+```
+
+---
+
 ## File Layout
 
 ```
 proxy0/
-├── proxy.py              # Vultr main entry
-├── proxy_aliyun.py       # Aliyun main entry
+├── main.py               # Unified entry (recommended)
+├── proxy.py              # Vultr standalone entry (legacy)
+├── proxy_aliyun.py       # Aliyun standalone entry (legacy)
 ├── vultr.py              # Vultr API v2 wrapper
 ├── cloudinit.py          # generates the server-side cloud-init script
 ├── client_config.py      # builds the VLESS link and Clash YAML

@@ -56,25 +56,56 @@ ALIYUN_PW=your_root_password
 
 ---
 
+## 统一入口（推荐）
+
+使用 `main.py` 管理所有平台：
+
+```bash
+# Vultr 命令
+python3 main.py vultr create              # 创建 Vultr 服务器
+python3 main.py vultr destroy             # 销毁 Vultr 服务器
+python3 main.py vultr rebuild             # 重建 Vultr 服务器
+python3 main.py vultr config              # 显示 Vultr 配置
+python3 main.py vultr status              # 查看 Vultr 状态
+python3 main.py vultr check               # 检测 Vultr 连通性
+python3 main.py vultr regions             # 列出 Vultr 地区
+
+# 阿里云命令
+python3 main.py aliyun list               # 列出阿里云实例
+python3 main.py aliyun deploy <ip>        # 部署到阿里云实例
+python3 main.py aliyun config             # 显示阿里云配置
+python3 main.py aliyun status             # 查看阿里云状态
+python3 main.py aliyun check              # 检测阿里云连通性
+python3 main.py aliyun destroy            # 销毁阿里云服务器
+python3 main.py aliyun rebuild            # 重建阿里云服务器
+
+# 自动检测命令（有哪个显示哪个）
+python3 main.py status                    # 显示所有配置的服务器状态
+python3 main.py config                    # 显示所有配置的服务器配置
+python3 main.py check                     # 检测所有服务器连通性
+```
+
+---
+
 ## Vultr 使用指南
 
 ### 创建服务器
 
 ```bash
-python3 proxy.py create
+python3 main.py vultr create
 ```
 
 ### 常用命令
 
 | 命令 | 说明 |
 |------|------|
-| `python3 proxy.py create` | 创建服务器并输出客户端配置 |
-| `python3 proxy.py destroy` | 销毁当前服务器（停止计费）|
-| `python3 proxy.py rebuild` | 销毁并重建，用于 IP 被封时换 IP |
-| `python3 proxy.py config` | 重新显示客户端配置 |
-| `python3 proxy.py status` | 查看当前服务器状态 |
-| `python3 proxy.py check` | 检测 IP 连通性（TCP + Ping）|
-| `python3 proxy.py regions` | 列出所有可用地区 |
+| `python3 main.py vultr create` | 创建服务器并输出客户端配置 |
+| `python3 main.py vultr destroy` | 销毁当前服务器（停止计费）|
+| `python3 main.py vultr rebuild` | 销毁并重建，用于 IP 被封时换 IP |
+| `python3 main.py vultr config` | 重新显示客户端配置 |
+| `python3 main.py vultr status` | 查看当前服务器状态 |
+| `python3 main.py vultr check` | 检测 IP 连通性（TCP + Ping）|
+| `python3 main.py vultr regions` | 列出所有可用地区 |
 
 ### 推荐地区
 
@@ -102,23 +133,23 @@ python3 proxy.py create
 
 ```bash
 # 方式1：指定 IP 部署
-python3 proxy_aliyun.py deploy 8.x.x.x
+python3 main.py aliyun deploy 8.x.x.x
 
 # 方式2：列出已有实例，选择部署
-python3 proxy_aliyun.py deploy
+python3 main.py aliyun deploy
 ```
 
 ### 常用命令
 
 | 命令 | 说明 |
 |------|------|
-| `python3 proxy_aliyun.py list` | 列出所有实例 |
-| `python3 proxy_aliyun.py deploy <ip>` | 部署 xray 到指定实例 |
-| `python3 proxy_aliyun.py config` | 显示客户端配置 |
-| `python3 proxy_aliyun.py status` | 查看当前服务器状态 |
-| `python3 proxy_aliyun.py check` | 检测 IP 连通性 |
-| `python3 proxy_aliyun.py destroy` | 销毁当前服务器 |
-| `python3 proxy_aliyun.py rebuild` | 销毁并重建 |
+| `python3 main.py aliyun list` | 列出所有实例 |
+| `python3 main.py aliyun deploy <ip>` | 部署 xray 到指定实例 |
+| `python3 main.py aliyun config` | 显示客户端配置 |
+| `python3 main.py aliyun status` | 查看当前服务器状态 |
+| `python3 main.py aliyun check` | 检测 IP 连通性 |
+| `python3 main.py aliyun destroy` | 销毁当前服务器 |
+| `python3 main.py aliyun rebuild` | 销毁并重建 |
 
 ### 阿里云特点
 
@@ -144,8 +175,9 @@ python3 proxy_aliyun.py deploy
 
 ```
 proxy0/
-├── proxy.py              # Vultr 主入口
-├── proxy_aliyun.py       # 阿里云主入口
+├── main.py               # 统一入口（推荐）
+├── proxy.py              # Vultr 独立入口（兼容旧版）
+├── proxy_aliyun.py       # 阿里云独立入口（兼容旧版）
 ├── vultr.py              # Vultr API v2 封装
 ├── cloudinit.py          # 服务端 cloud-init 脚本生成
 ├── client_config.py      # 生成 VLESS 链接和 Clash YAML
@@ -170,6 +202,26 @@ proxy0/
 - 服务器禁用 SSH 密码登录，仅允许 SSH Key 认证（部署完成后）
 - xray 仅监听 443 端口
 - Reality 协议无需证书，流量特征接近真实 HTTPS
+
+---
+
+## 快捷别名
+
+为简化输入，你可以在 shell 配置中添加别名：
+
+```bash
+# ~/.zshrc 或 ~/.bashrc
+alias vultr='python3 ~/github/proxy0/main.py vultr'
+alias aliyun='python3 ~/github/proxy0/main.py aliyun'
+alias proxy='python3 ~/github/proxy0/main.py'
+```
+
+然后可以直接使用：
+```bash
+vultr status      # 等同于 python3 main.py vultr status
+aliyun config     # 等同于 python3 main.py aliyun config
+proxy check       # 检查所有服务器
+```
 
 ---
 

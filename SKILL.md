@@ -6,107 +6,108 @@ description: Manage VLESS+Reality proxy servers on Vultr and Aliyun. Use when th
 ## Project Location
 `/Users/zhujian/github/proxy0/`
 
+## Unified Entry (Recommended)
+
+Use `main.py` with provider prefix:
+
+```bash
+cd /Users/zhujian/github/proxy0
+
+# Vultr
+python3 main.py vultr create              # Create server
+python3 main.py vultr destroy             # Destroy server
+python3 main.py vultr rebuild             # Rebuild (new IP)
+python3 main.py vultr config              # Show config
+python3 main.py vultr status              # Show status
+python3 main.py vultr check               # Check connectivity
+python3 main.py vultr regions             # List regions
+
+# Aliyun
+python3 main.py aliyun list               # List instances
+python3 main.py aliyun deploy <ip>        # Deploy to instance
+python3 main.py aliyun config             # Show config
+python3 main.py aliyun status             # Show status
+python3 main.py aliyun check              # Check connectivity
+python3 main.py aliyun destroy            # Destroy server
+python3 main.py aliyun rebuild            # Rebuild (new IP)
+
+# Auto-detect (no provider prefix)
+python3 main.py status                    # Show all configured servers
+python3 main.py config                    # Show all configs
+python3 main.py check                     # Check all servers
+```
+
 ## Supported Platforms
 
-### Vultr (Global VPS)
-- **Cost**: ~$5/month
-- **IP Changes**: Unlimited
-- **Latency**: 50-150ms
-- **Best for**: Frequent IP rotation
-
-### Aliyun SWAS (Hong Kong)
-- **Cost**: ~30-40 RMB/month
-- **IP Changes**: 3/month (free)
-- **Latency**: 30-50ms
-- **Best for**: Lower latency from China
-
----
-
-## Vultr Commands
-
-```bash
-cd /Users/zhujian/github/proxy0
-
-python3 proxy.py create    # Create server, outputs VLESS link + clash_config.yaml
-python3 proxy.py destroy   # Destroy server (stop billing)
-python3 proxy.py rebuild   # Destroy + recreate (use when IP is blocked)
-python3 proxy.py config    # Print VLESS link and Clash YAML again
-python3 proxy.py status    # Show current instance info
-python3 proxy.py check     # Test IP connectivity (TCP + ping)
-python3 proxy.py regions   # List available regions
-```
-
-## Aliyun Commands
-
-```bash
-cd /Users/zhujian/github/proxy0
-
-# First, buy a server at https://swasnext.console.aliyun.com/buy (Hong Kong region)
-# Then deploy xray to it:
-
-python3 proxy_aliyun.py deploy <ip>    # Deploy xray to existing instance
-python3 proxy_aliyun.py list           # List all instances
-python3 proxy_aliyun.py config         # Print VLESS link and Clash YAML
-python3 proxy_aliyun.py status         # Show current instance info
-python3 proxy_aliyun.py check          # Test IP connectivity
-python3 proxy_aliyun.py destroy        # Destroy server
-python3 proxy_aliyun.py rebuild        # Destroy + recreate
-```
-
----
+| Platform | Cost | IP Changes | Latency | Best For |
+|----------|------|------------|---------|----------|
+| **Vultr** | ~$5/month | Unlimited | 50-150ms | Frequent IP rotation |
+| **Aliyun SWAS** | ~30-40 RMB/month | 3/month (free) | 30-50ms | Lower latency from China |
 
 ## Config
 
 Edit `/Users/zhujian/github/proxy0/.env`:
 
-### Vultr Settings
-- `VULTR_REGION` — server region (default: `nrt` Tokyo). Options: `itm` Osaka, `icn` Seoul, `sgp` Singapore, `lax` LA
-- `VULTR_API_KEY` — Vultr API key
-- `VULTR_SSH_KEY_ID` — SSH key ID on Vultr
+```env
+# Vultr
+VULTR_API_KEY=your_key
+VULTR_SSH_KEY_ID=your_ssh_key_id
+VULTR_REGION=icn
 
-### Aliyun Settings
-- `ALIYUN_ACCESS_KEY` — Aliyun Access Key
-- `ALIYUN_ACCESS_SECRET` — Aliyun Access Secret
-- `ALIYUN_PW` — Root password for Aliyun instances
-
----
+# Aliyun
+ALIYUN_ACCESS_KEY=your_key
+ALIYUN_ACCESS_SECRET=your_secret
+ALIYUN_PW=your_root_password
+```
 
 ## Common Tasks
 
 **IP blocked → get new IP:**
 ```bash
-# Vultr
-python3 proxy.py rebuild
+# Vultr (unlimited)
+python3 main.py vultr rebuild
 
-# Aliyun (limit: 3/month)
-python3 proxy_aliyun.py rebuild
+# Aliyun (3/month)
+python3 main.py aliyun rebuild
 ```
 
 **Switch region (Vultr):**
 1. Edit `.env`: set `VULTR_REGION=sgp`
-2. Run `python3 proxy.py rebuild`
+2. Run `python3 main.py vultr rebuild`
 
-**Get client config again:**
+**Get client config:**
 ```bash
-# Vultr
-python3 proxy.py config
+python3 main.py vultr config      # Vultr
+python3 main.py aliyun config     # Aliyun
+python3 main.py config            # Auto-detect
 
-# Aliyun
-python3 proxy_aliyun.py config
-
-# Outputs: vless://... link for Shadowrocket/v2rayN
-# Saves: clash_config.yaml (Vultr) or clash_config_aliyun.yaml (Aliyun)
+# Outputs: vless://... link
+# Saves: clash_config_vultr.yaml or clash_config_aliyun.yaml
 ```
 
----
+**Check all servers:**
+```bash
+python3 main.py check
+```
+
+## Aliases
+
+For convenience, add to `~/.zshrc` or `~/.bashrc`:
+
+```bash
+alias vultr='python3 ~/github/proxy0/main.py vultr'
+alias aliyun='python3 ~/github/proxy0/main.py aliyun'
+alias proxy='python3 ~/github/proxy0/main.py'
+```
+
+Then use: `vultr status`, `aliyun config`, `proxy check`
 
 ## Notes
 
 - Protocol: VLESS + XTLS-Reality on port 443
-- SNI masquerade target: `www.microsoft.com`
+- SNI masquerade: `www.microsoft.com`
 - Anthropic domains (claude.ai, anthropic.com) always route through proxy
-- SSH password login disabled after deployment; only SSH key auth works
+- Requires Clash Meta (standard Clash does NOT support VLESS)
 - State files (gitignored):
-  - `.proxy_state.json` — Vultr instance state
-  - `.proxy_state_aliyun.json` — Aliyun instance state
-- Client requires Clash Meta (e.g., Clash Verge Rev) — standard Clash does NOT support VLESS
+  - `.proxy_state.json` — Vultr
+  - `.proxy_state_aliyun.json` — Aliyun
