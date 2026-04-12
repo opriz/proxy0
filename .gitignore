@@ -1,7 +1,18 @@
+# State files
 .proxy_state.json
+.proxy_state_aliyun.json
+
+# Config files
 clash_config.yaml
+clash_config_aliyun.yaml
+
+# Environment
+.env
+
+# Python
 __pycache__/
 *.pyc
-.env
+
+# macOS
 .DS_Store
 

@@ -16,6 +16,11 @@ VULTR_API_KEY = os.environ.get("VULTR_API_KEY", "")
 # SSH key ID (on Vultr, used for passwordless login)
 SSH_KEY_ID = os.environ.get("VULTR_SSH_KEY_ID", "")
 
+# Aliyun credentials
+ALIYUN_ACCESS_KEY = os.environ.get("ALIYUN_ACCESS_KEY", "")
+ALIYUN_ACCESS_SECRET = os.environ.get("ALIYUN_ACCESS_SECRET", "")
+ALIYUN_PW = os.environ.get("ALIYUN_PW", "")
+
 # Instance config
 INSTANCE_LABEL = "proxy0"
 REGION = os.environ.get("VULTR_REGION", "icn")   # Seoul; other options: nrt, sgp, lax, itm

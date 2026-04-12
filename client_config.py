@@ -59,6 +59,10 @@ def generate_clash_config(ip: str, uuid: str, port: int, public_key: str,
             }
         ],
         "rules": [
+            "DOMAIN-SUFFIX,anthropic.com,Proxy",
+            "DOMAIN-SUFFIX,claude.ai,Proxy",
+            "DOMAIN-SUFFIX,claudeusercontent.com,Proxy",
+            "DOMAIN-SUFFIX,anthropic.io,Proxy",
             "GEOIP,CN,DIRECT",
             "MATCH,Proxy",
         ],

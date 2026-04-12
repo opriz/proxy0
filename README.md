@@ -1,6 +1,6 @@
 # proxy0
 
-一键在 Vultr 上部署 VLESS+Reality 代理服务器，IP 被封时可快速销毁重建换 IP。
+一键部署 VLESS+Reality 代理服务器，支持 **Vultr** 和 **阿里云** 双平台，IP 被封时可快速销毁重建换 IP。
 
 English version: [README.en.md](README.en.md)
 
@@ -8,15 +8,14 @@ English version: [README.en.md](README.en.md)
 
 ## 原理
 
-本地脚本调用 Vultr API 创建 VPS，通过 `user_data`（cloud-init）在服务器首次启动时自动安装并配置 xray。创建完成后脚本通过 SSH 读取服务端生成的 Reality 公钥等信息，生成客户端配置。IP 被封时一条命令销毁重建，约 4 分钟得到新 IP。
+本地脚本调用云厂商 API 创建 VPS，通过 `user_data`（cloud-init）在服务器首次启动时自动安装并配置 xray。创建完成后脚本通过 SSH 读取服务端生成的 Reality 公钥等信息，生成客户端配置。IP 被封时一条命令销毁重建，约 4 分钟得到新 IP。
 
 ---
 
 ## 前置条件
 
 - Python 3.8+
-- Vultr 账号及 API Key
-- 本地 SSH 密钥对（`~/.ssh/id_ed25519` 或 `id_rsa`），并已上传到 Vultr 控制台
+- Vultr 账号 或 阿里云账号
 - 客户端：Clash Meta（推荐 [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev)）或 Shadowrocket / v2rayN
 
 ---
@@ -38,39 +37,46 @@ cp .env.example .env
 编辑 `.env`：
 
 ```env
+# Vultr 配置（可选）
 VULTR_API_KEY=your_vultr_api_key
-VULTR_SSH_KEY_ID=your_ssh_key_id   # Vultr 控制台 Account → SSH Keys
-VULTR_REGION=icn                   # 默认首尔，其他地区见下方列表
+VULTR_SSH_KEY_ID=your_ssh_key_id
+VULTR_REGION=icn
+
+# 阿里云配置（可选）
+ALIYUN_ACCESS_KEY=your_aliyun_ak
+ALIYUN_ACCESS_SECRET=your_aliyun_sk
+ALIYUN_PW=your_root_password
 ```
 
-**获取 SSH Key ID：**
+**获取 Vultr SSH Key ID：**
 先在 Vultr 控制台 Account → SSH Keys 上传本地公钥，复制显示的 ID 填入 `.env`。
 
-### 3. 创建服务器
+**阿里云密码：**
+在阿里云轻量控制台重置服务器密码，填入 `ALIYUN_PW`。
+
+---
+
+## Vultr 使用指南
+
+### 创建服务器
 
 ```bash
 python3 proxy.py create
 ```
 
-完成后自动输出 Shadowrocket / v2rayN 导入链接，并将 Clash 配置保存到 `clash_config.yaml`。
-
----
-
-## 命令
+### 常用命令
 
 | 命令 | 说明 |
 |------|------|
 | `python3 proxy.py create` | 创建服务器并输出客户端配置 |
 | `python3 proxy.py destroy` | 销毁当前服务器（停止计费）|
 | `python3 proxy.py rebuild` | 销毁并重建，用于 IP 被封时换 IP |
-| `python3 proxy.py config` | 重新显示客户端配置（VLESS 链接 + Clash YAML）|
+| `python3 proxy.py config` | 重新显示客户端配置 |
 | `python3 proxy.py status` | 查看当前服务器状态 |
 | `python3 proxy.py check` | 检测 IP 连通性（TCP + Ping）|
 | `python3 proxy.py regions` | 列出所有可用地区 |
 
----
-
-## 推荐地区
+### 推荐地区
 
 | 代码 | 地区 | 延迟参考 |
 |------|------|---------|
@@ -80,17 +86,55 @@ python3 proxy.py create
 | `sgp` | 新加坡 Singapore | ~80ms |
 | `lax` | 洛杉矶 Los Angeles | ~150ms |
 
-切换地区：修改 `.env` 中的 `VULTR_REGION`，然后 `python3 proxy.py rebuild`。完整列表可通过 `python3 proxy.py regions` 查看。
+---
+
+## 阿里云使用指南
+
+### 购买服务器
+
+1. 访问 https://swasnext.console.aliyun.com/buy
+2. 选择：**中国香港** 地域
+3. 镜像：**Alibaba Cloud Linux** 或 **Debian 12**
+4. 套餐：入门型（30元/月）或 锐驰型（40元/月不限流）
+5. 购买后记录 **公网 IP**，在控制台重置 **root 密码**
+
+### 部署代理
+
+```bash
+# 方式1：指定 IP 部署
+python3 proxy_aliyun.py deploy 8.x.x.x
+
+# 方式2：列出已有实例，选择部署
+python3 proxy_aliyun.py deploy
+```
+
+### 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `python3 proxy_aliyun.py list` | 列出所有实例 |
+| `python3 proxy_aliyun.py deploy <ip>` | 部署 xray 到指定实例 |
+| `python3 proxy_aliyun.py config` | 显示客户端配置 |
+| `python3 proxy_aliyun.py status` | 查看当前服务器状态 |
+| `python3 proxy_aliyun.py check` | 检测 IP 连通性 |
+| `python3 proxy_aliyun.py destroy` | 销毁当前服务器 |
+| `python3 proxy_aliyun.py rebuild` | 销毁并重建 |
+
+### 阿里云特点
+
+- **延迟低**：到香港节点约 30-50ms（比 Vultr 韩国快）
+- **带宽大**：200Mbps 峰值（锐驰型）
+- **换 IP 限制**：每月可免费更换 3 次 IP
 
 ---
 
 ## 默认配置
 
-- 套餐：`vc2-1c-1gb`（约 $5/月）
-- 系统：Debian 12 x64
-- 协议：VLESS + XTLS-Reality
-- 端口：443
+- 套餐：最低配（约 $5/月 或 30元/月）
+- 协议：**VLESS + XTLS-Reality**
+- 端口：**443**
 - SNI 伪装目标：`www.microsoft.com`
+- 规则：Anthropic 域名强制走代理
 
 如需修改，编辑 `config.py`。
 
@@ -100,26 +144,45 @@ python3 proxy.py create
 
 ```
 proxy0/
-├── proxy.py          # 主入口，所有命令
-├── vultr.py          # Vultr API v2 封装
-├── cloudinit.py      # 服务端 cloud-init 脚本生成
-├── client_config.py  # 生成 VLESS 链接和 Clash YAML
-├── config.py         # 配置读取（从 .env 或环境变量）
+├── proxy.py              # Vultr 主入口
+├── proxy_aliyun.py       # 阿里云主入口
+├── vultr.py              # Vultr API v2 封装
+├── cloudinit.py          # 服务端 cloud-init 脚本生成
+├── client_config.py      # 生成 VLESS 链接和 Clash YAML
+├── config.py             # 配置读取（从 .env 或环境变量）
 ├── requirements.txt
-├── .env.example      # 环境变量模板
+├── .env.example          # 环境变量模板
 └── .gitignore
 ```
 
-运行后会生成：
+运行后会生成（已加入 .gitignore）：
 
-- `.proxy_state.json` — 当前实例状态（ID、IP、UUID、Reality 公钥等）
-- `clash_config.yaml` — Clash Meta 配置文件
+- `.proxy_state.json` — Vultr 实例状态
+- `.proxy_state_aliyun.json` — 阿里云实例状态
+- `clash_config.yaml` — Vultr Clash 配置
+- `clash_config_aliyun.yaml` — 阿里云 Clash 配置
 
 ---
 
 ## 安全说明
 
-- `.env` 和 `.proxy_state.json` 已加入 `.gitignore`，不会提交到 git
-- 服务器禁用 SSH 密码登录，仅允许 SSH Key 认证
+- `.env` 和所有状态文件已加入 `.gitignore`，不会提交到 git
+- 服务器禁用 SSH 密码登录，仅允许 SSH Key 认证（部署完成后）
 - xray 仅监听 443 端口
 - Reality 协议无需证书，流量特征接近真实 HTTPS
+
+---
+
+## 平台对比
+
+| 特性 | Vultr | 阿里云 |
+|------|-------|--------|
+| 价格 | $5/月 (~36元) | 30-40元/月 |
+| 延迟 | 50-150ms | 30-50ms |
+| 带宽 | 1Gbps | 200Mbps |
+| 流量 | 不限 | 500GB-不限 |
+| 换 IP | 不限次数 | 3次/月 |
+| 稳定性 | 高 | 高 |
+| 被封风险 | 低 | 中 |
+
+**建议**：国内用户优先选择 **阿里云香港**，延迟更低；需要频繁换 IP 选 **Vultr**。
