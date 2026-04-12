@@ -2,6 +2,9 @@
 """
 proxy.py - Vultr proxy server management tool
 
+NOTE: This is the standalone Vultr entry. Consider using the unified entry:
+  python3 main.py vultr <command>
+
 Usage:
   python proxy.py create              # create a new server
   python proxy.py destroy             # destroy the current server

@@ -2,6 +2,9 @@
 """
 proxy_aliyun.py - Aliyun SWAS proxy server management tool
 
+NOTE: This is the standalone Aliyun entry. Consider using the unified entry:
+  python3 main.py aliyun <command>
+
 Usage:
   python proxy_aliyun.py list                # list all instances
   python proxy_aliyun.py deploy <ip>         # deploy xray to existing instance
