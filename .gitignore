@@ -1,10 +1,8 @@
 # State files
-.proxy_state.json
-.proxy_state_aliyun.json
+.proxy_state*.json
 
 # Config files
-clash_config.yaml
-clash_config_aliyun.yaml
+clash_config*.yaml
 
 # Environment
 .env

@@ -30,14 +30,16 @@ import uuid
 import requests
 import client_config as cc
 from config import (
-    XRAY_PORT, XRAY_SNI, ALIYUN_ACCESS_KEY, ALIYUN_ACCESS_SECRET, ALIYUN_PW
+    XRAY_PORT, XRAY_SNI, ALIYUN_ACCESS_KEY, ALIYUN_ACCESS_SECRET, ALIYUN_PW,
+    ALIYUN_REGION,
 )
 
 # ─── Aliyun API Client ───────────────────────────────────────────────────────
 
-BASE_URL = "https://swas.cn-hongkong.aliyuncs.com"
-REGION = "cn-hongkong"
-STATE_FILE = ".proxy_state_aliyun.json"
+REGION = ALIYUN_REGION
+BASE_URL = f"https://swas.{REGION}.aliyuncs.com"
+REGION_SHORT = {"ap-southeast-1": "sg", "cn-hongkong": "hk"}.get(REGION, REGION)
+STATE_FILE = f".proxy_state_aliyun_{REGION_SHORT}.json"
 
 
 def _sign(params: dict, method: str = "GET") -> str:
@@ -238,7 +240,10 @@ def cmd_list():
     for inst in instances:
         print(f"  ID: {inst.get('InstanceId')}")
         print(f"  Name: {inst.get('InstanceName')}")
-        print(f"  IP: {inst.get('PublicIpAddress', {}).get('Ip', 'N/A')}")
+        ip_addr = inst.get('PublicIpAddress', 'N/A')
+        if isinstance(ip_addr, dict):
+            ip_addr = ip_addr.get('Ip', 'N/A')
+        print(f"  IP: {ip_addr}")
         print(f"  Status: {inst.get('Status')}")
         print("-" * 40)
 
@@ -251,7 +256,9 @@ def cmd_deploy():
         if instances:
             print("Found existing instances:")
             for idx, inst in enumerate(instances, 1):
-                ip = inst.get('PublicIpAddress', {}).get('Ip', 'N/A')
+                ip = inst.get('PublicIpAddress', 'N/A')
+                if isinstance(ip, dict):
+                    ip = ip.get('Ip', 'N/A')
                 print(f"  {idx}. {inst.get('InstanceName')} - {ip}")
             print("\nUsage: python proxy_aliyun.py deploy <ip>")
         else:
@@ -301,7 +308,7 @@ def cmd_deploy():
         "short_id": proxy_info.get("short_id", ""),
         "port": XRAY_PORT,
         "sni": XRAY_SNI,
-        "region": "cn-hongkong",
+        "region": REGION,
     }
     _save_state(state)
 
@@ -382,7 +389,7 @@ def cmd_status():
         return
 
     print(f"IP          : {state['ip']}")
-    print(f"Region      : {state.get('region', 'cn-hongkong')}")
+    print(f"Region      : {state.get('region', REGION)}")
     print(f"Port        : {state.get('port')}")
     print(f"UUID        : {state.get('uuid')}")
 

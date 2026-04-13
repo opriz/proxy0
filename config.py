@@ -20,6 +20,7 @@ SSH_KEY_ID = os.environ.get("VULTR_SSH_KEY_ID", "")
 ALIYUN_ACCESS_KEY = os.environ.get("ALIYUN_ACCESS_KEY", "")
 ALIYUN_ACCESS_SECRET = os.environ.get("ALIYUN_ACCESS_SECRET", "")
 ALIYUN_PW = os.environ.get("ALIYUN_PW", "")
+ALIYUN_REGION = os.environ.get("ALIYUN_REGION", "ap-southeast-1")  # ap-southeast-1 (SG) or cn-hongkong (HK)
 
 # Instance config
 INSTANCE_LABEL = "proxy0"
