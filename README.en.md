@@ -242,7 +242,7 @@ Generated at runtime (in `.gitignore`):
 | Bandwidth | 1Gbps | 200Mbps |
 | Traffic | Unlimited | 500GB-Unlimited |
 | IP Changes | Unlimited | 3/month |
-| Stability | High | High |
+| Stability | Medium | High |
 | Block Risk | Low | Medium |
 
 **Recommendation**: Users in China should choose **Aliyun Singapore** (Hong Kong cannot access Claude); pick **Vultr** if you need frequent IP changes.
