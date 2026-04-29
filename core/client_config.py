@@ -1,11 +1,9 @@
+"""Build client-side share links and Clash Meta config from server params."""
 import yaml
-import base64
-import json
 
 
 def vless_link(ip: str, uuid: str, port: int, public_key: str,
                short_id: str, sni: str, remark: str = "proxy0") -> str:
-    """Build a VLESS Reality share link."""
     params = (
         f"type=tcp"
         f"&security=reality"
@@ -20,7 +18,6 @@ def vless_link(ip: str, uuid: str, port: int, public_key: str,
 
 def clash_proxy(ip: str, uuid: str, port: int, public_key: str,
                 short_id: str, sni: str, name: str = "proxy0") -> dict:
-    """Build a Clash Meta proxy entry."""
     return {
         "name": name,
         "type": "vless",
@@ -41,8 +38,7 @@ def clash_proxy(ip: str, uuid: str, port: int, public_key: str,
 
 
 def generate_clash_config(ip: str, uuid: str, port: int, public_key: str,
-                           short_id: str, sni: str) -> str:
-    """Build the full Clash Meta config file content."""
+                          short_id: str, sni: str) -> str:
     proxy = clash_proxy(ip, uuid, port, public_key, short_id, sni)
     config = {
         "mixed-port": 7890,

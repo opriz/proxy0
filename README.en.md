@@ -167,7 +167,7 @@ python3 main.py aliyun deploy
 - SNI target: `www.microsoft.com`
 - Rules: Anthropic domains always go through proxy
 
-Edit `config.py` to change any of these.
+Edit `core/config.py` or override via `.env`.
 
 ---
 
@@ -195,17 +195,25 @@ proxy check       # Check all servers
 
 ```
 proxy0/
-├── main.py               # Unified entry (recommended)
-├── proxy.py              # Vultr standalone entry (legacy)
-├── proxy_aliyun.py       # Aliyun standalone entry (legacy)
-├── vultr.py              # Vultr API v2 wrapper
-├── cloudinit.py          # generates the server-side cloud-init script
-├── client_config.py      # builds the VLESS link and Clash YAML
-├── config.py             # reads config from .env / environment
+├── main.py                       # Unified entry point
+├── SKILL.md                      # Full agent-facing usage guide
+├── core/                         # Provider-agnostic shared code
+│   ├── config.py                 # loads .env / env vars
+│   ├── client_config.py          # builds VLESS links & Clash YAML
+│   └── connectivity.py           # state files, TCP/ping probes
+├── providers/
+│   ├── vultr/                    # Vultr implementation
+│   │   ├── api.py / cloudinit.py / manager.py
+│   │   └── SETUP.md              # how to obtain the API key
+│   └── aliyun/                   # Aliyun SWAS implementation
+│       ├── api.py / deploy_script.py / manager.py
+│       └── SETUP.md              # how to obtain AK/SK
+├── .env.example
 ├── requirements.txt
-├── .env.example          # environment variable template
 └── .gitignore
 ```
+
+To add a new provider, drop a `manager.py` (exposing a `COMMANDS` dict) under `providers/<name>/` and register it in `main.py`'s `PROVIDERS`.
 
 Generated at runtime (in `.gitignore`):
 

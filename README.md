@@ -167,7 +167,7 @@ python3 main.py aliyun deploy
 - SNI 伪装目标：`www.microsoft.com`
 - 规则：Anthropic 域名强制走代理
 
-如需修改，编辑 `config.py`。
+如需修改，编辑 `core/config.py` 或 `.env`。
 
 ---
 
@@ -175,17 +175,25 @@ python3 main.py aliyun deploy
 
 ```
 proxy0/
-├── main.py               # 统一入口（推荐）
-├── proxy.py              # Vultr 独立入口（兼容旧版）
-├── proxy_aliyun.py       # 阿里云独立入口（兼容旧版）
-├── vultr.py              # Vultr API v2 封装
-├── cloudinit.py          # 服务端 cloud-init 脚本生成
-├── client_config.py      # 生成 VLESS 链接和 Clash YAML
-├── config.py             # 配置读取（从 .env 或环境变量）
+├── main.py                       # 统一入口
+├── SKILL.md                      # 给 AI agent 用的完整说明
+├── core/                         # 平台无关的共享代码
+│   ├── config.py                 # 读取 .env / 环境变量
+│   ├── client_config.py          # 生成 VLESS 链接 / Clash YAML
+│   └── connectivity.py           # state 文件、TCP/ping 探活
+├── providers/
+│   ├── vultr/                    # Vultr 实现
+│   │   ├── api.py / cloudinit.py / manager.py
+│   │   └── SETUP.md              # 如何申请 AK
+│   └── aliyun/                   # 阿里云 SWAS 实现
+│       ├── api.py / deploy_script.py / manager.py
+│       └── SETUP.md              # 如何申请 AK/SK
+├── .env.example
 ├── requirements.txt
-├── .env.example          # 环境变量模板
 └── .gitignore
 ```
+
+新增云厂商时只需在 `providers/<name>/` 下放一个带 `COMMANDS` dict 的 `manager.py`，然后在 `main.py` 的 `PROVIDERS` 注册即可。
 
 运行后会生成（已加入 .gitignore）：
 
