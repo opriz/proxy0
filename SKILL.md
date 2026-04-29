@@ -62,7 +62,7 @@ cover the full prerequisite chain:
 | Vultr SSH key (optional) | `VULTR_SSH_KEY_ID` set | Upload key at https://my.vultr.com/account/#accountssh; get UUID via `curl -s -H "Authorization: Bearer $VULTR_API_KEY" https://api.vultr.com/v2/ssh-keys \| jq` |
 | Aliyun account | Has `ALIYUN_ACCESS_KEY` + `_SECRET` and AK works against `ListInstances` | If user has no account: signup at https://www.alibabacloud.com/ → create **RAM sub-user** at https://ram.console.aliyun.com/users → enable OpenAPI access → generate AccessKey → attach `AliyunSWASFullAccess` policy. **Never use root account's key.** |
 | Aliyun root password | `ALIYUN_PW` set | Set when buying the SWAS VM, or reset via console |
-| Aliyun instance | At least one SWAS instance exists in `ALIYUN_REGION` | Aliyun create is **manual**. Send user to https://swasnext.console.aliyun.com/buy. **Must be the *overseas* edition of 轻量应用服务器** (Singapore / Hong Kong) — the mainland-China edition cannot reach blocked sites. Cheapest plan (~24-30 RMB/mo) is enough. Pick image **Alibaba Cloud Linux 3**, set the same root password as `ALIYUN_PW`, open TCP 443 in firewall. Then `python3 main.py aliyun deploy <ip>`. |
+| Aliyun instance | At least one SWAS instance exists in `ALIYUN_REGION` | Aliyun create is **manual**. Send user to https://swasnext.console.aliyun.com/buy. **Must be the *overseas* edition of 轻量应用服务器** (preferably Singapore; Hong Kong also works but Claude is blocked there) — the mainland-China edition cannot reach blocked sites. Cheapest plan (~24-30 RMB/mo) is enough. Pick image **Alibaba Cloud Linux 3**, set the same root password as `ALIYUN_PW`, open TCP 443 in firewall. Then `python3 main.py aliyun deploy <ip>`. |
 
 The script exits 0 when everything is in place, non-zero with a punch-list otherwise.
 
@@ -95,7 +95,7 @@ The Aliyun SWAS API does NOT support creating instances programmatically with a 
 **⚠️ CRITICAL: tell the user to buy the *overseas* edition of 轻量应用服务器 (Simple Application Server / SWAS), not the mainland-China edition.**
 - Mainland-China SWAS instances cannot reach blocked sites — useless as a proxy.
 - Overseas SWAS is cheap: smallest plan is ~24–30 RMB/month (1 vCPU / 1 GB / 30 Mbps), which is plenty for personal proxy traffic.
-- Pick **Singapore (`ap-southeast-1`)** for general use or **Hong Kong (`cn-hongkong`)** if the user needs the lowest latency from mainland China (but HK IPs get probed harder).
+- Pick **Singapore (`ap-southeast-1`)** for general use — Claude is blocked on Hong Kong IPs, so Singapore is the recommended default. **Hong Kong (`cn-hongkong`)** is only useful if the user needs the absolute lowest latency from mainland China and doesn't need Claude.
 
 Steps:
 1. https://swasnext.console.aliyun.com/buy

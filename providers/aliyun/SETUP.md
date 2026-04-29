@@ -40,7 +40,7 @@ xray onto it.
 2. Product: **轻量应用服务器 / Simple Application Server** — make sure the
    region selector at the top is set to an overseas region:
    - **Singapore (`ap-southeast-1`)** — recommended default; best for Anthropic / Google / general
-   - **Hong Kong (`cn-hongkong`)** — lowest latency from mainland China, but probed more aggressively
+   - **Hong Kong (`cn-hongkong`)** — lowest latency from mainland China, but probed more aggressively and Claude is blocked on HK IPs
 3. Plan: the cheapest one (e.g. 1 vCPU / 1 GB / 30 Mbps peak, ~24–30 RMB/mo).
    Don't pay for a bigger plan — proxy throughput is bottlenecked by the IP,
    not by CPU/RAM.

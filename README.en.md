@@ -124,7 +124,7 @@ python3 main.py vultr create
 ### Buy a Server
 
 1. Visit https://swasnext.console.aliyun.com/buy
-2. Select: **Hong Kong (China)** region
+2. Select: **Singapore** region (Hong Kong cannot access Claude, not recommended)
 3. Image: **Alibaba Cloud Linux** or **Debian 12**
 4. Plan: Entry-level (~$4.5/month) or Speed (unlimited traffic ~$6/month)
 5. Save the **public IP** and reset **root password** in console
@@ -153,7 +153,7 @@ python3 main.py aliyun deploy
 
 ### Aliyun Features
 
-- **Low latency**: ~30-50ms to Hong Kong (faster than Vultr Korea)
+- **Low latency**: ~70-80ms to Singapore
 - **High bandwidth**: 200Mbps peak (Speed plan)
 - **IP change limit**: 3 free IP changes per month
 
@@ -245,4 +245,4 @@ Generated at runtime (in `.gitignore`):
 | Stability | High | High |
 | Block Risk | Low | Medium |
 
-**Recommendation**: Users in China should prefer **Aliyun Hong Kong** for lower latency; choose **Vultr** if you need frequent IP changes.
+**Recommendation**: Users in China should choose **Aliyun Singapore** (Hong Kong cannot access Claude); pick **Vultr** if you need frequent IP changes.
